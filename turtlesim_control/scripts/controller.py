@@ -12,15 +12,20 @@ from turtlesim_interfaces.srv import SetGoal
 class Controller(Node):
     def __init__(self):
         super().__init__('controller')
-        self.command_publisher = self.create_publisher(Twist,'turtle1/cmd_vel',10)
+        self.command_publisher = self.create_publisher(Twist,'cmd_vel',10)
         timer_period = 0.1
         self.timer = self.create_timer(timer_period,self.timer_callback)
-        self.pose_subscription = self.create_subscription(Pose,'turtle1/pose',self.pose_callback,10)
+        self.pose_subscription = self.create_subscription(Pose,'pose',self.pose_callback,10)
         self.pose = Pose()
-        self.set_goal_service = self.create_service(SetGoal,'/set_goal',self.set_goal_callback)
-        self.enable_service = self.create_service(Empty,'/enable',self.enable_callback)
-        self.notify_arrival_client = self.create_client(Empty,'/notify_arrival')
-        
+        self.set_goal_service = self.create_service(SetGoal,'set_goal',self.set_goal_callback)
+        self.enable_service = self.create_service(Empty,'enable',self.enable_callback)
+        self.notify_arrival_client = self.create_client(Empty,'notify_arrival')
+
+        # Assignment 3 - Create Param for Gain and Speed
+        # self.declare_parameters(namespace="", parameters[('gain',5.0), ('speed', 1.0)])
+        self.K = self.declare_parameter("gain", 5.0)
+        self.v = self.declare_parameter("speed", 1.0)
+
         self.goal = np.array([2.0,3.0])
         self.isEnable = False
 
@@ -35,10 +40,10 @@ class Controller(Node):
         current_position = np.array([self.pose.x,self.pose.y])
         dp = self.goal-current_position
         e = np.arctan2(dp[1],dp[0])-self.pose.theta
-        K = 5.0
+        K = self.K.value # Assignment 3 5.0
         w = K*np.arctan2(np.sin(e),np.cos(e))
         if np.linalg.norm(dp)>0.1:
-            v = 1.0
+            v = self.v.value
         else:
             v = 0.0
             w = 0.0

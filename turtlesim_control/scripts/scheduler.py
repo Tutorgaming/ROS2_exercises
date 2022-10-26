@@ -11,21 +11,23 @@ from turtlesim_interfaces.srv import RandGoal, SetGoal
 class Scheduler(Node):
     def __init__(self):
         super().__init__('scheduler')
-        self.rand_goal_service = self.create_service(RandGoal,'/rand_goal',self.rand_goal_callback)
-        self.enable_client = self.create_client(Empty,'/enable')
-        self.set_goal_client = self.create_client(SetGoal,'/set_goal')
-        self.notify_arrival_service = self.create_service(Empty,'/notify_arrival',self.notify_arrival_callback)
-        
+
+        # Assignment 1 - Change All topic to namespace format
+        self.rand_goal_service = self.create_service(RandGoal,'rand_goal',self.rand_goal_callback)
+        self.enable_client = self.create_client(Empty,'enable')
+        self.set_goal_client = self.create_client(SetGoal,'set_goal')
+        self.notify_arrival_service = self.create_service(Empty,'notify_arrival',self.notify_arrival_callback)
+
         self.via_points = np.array([[2.0,5.0,8.0,1.0,9.0,2.0],[1.0,9.0,1.0,6.0,6.0,1.0]])
         self.num_via_points = self.via_points.shape[1]
-        self.idx = 0 
+        self.idx = 0
         current_goal = Point()
         current_goal.x = self.via_points[0][self.idx]
         current_goal.y = self.via_points[1][self.idx]
 
         while not self.set_goal_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('set_goal service not available, waiting again')
-        
+
         self.send_set_goal_request(current_goal)
 
         while not self.enable_client.wait_for_service(timeout_sec=1.0):
