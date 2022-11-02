@@ -57,9 +57,6 @@ def launch_action_robot_spawner(dh_parameters, robot_description, controller, po
     # robot_state_publisher
     DH2Transform(dh_parameters.package_name,dh_parameters.folder,dh_parameters.file)
     parameters = []
-    #############################################
-    # TODO 6: Many Robot
-    #############################################
     if robot_name:
         robot_desc_xml = xacro.process_file(
             robot_description.path,
@@ -71,7 +68,7 @@ def launch_action_robot_spawner(dh_parameters, robot_description, controller, po
         ).toxml()
     parameters.append({
         'robot_description':robot_desc_xml,
-        "frame_prefix": str(robot_name) + "/" if robot_name else ""   # TODO 6
+        "frame_prefix": str(robot_name) + "/" if robot_name else ""
     })
     parameters.append({'use_sim_time': True})
 
@@ -80,16 +77,15 @@ def launch_action_robot_spawner(dh_parameters, robot_description, controller, po
         executable='robot_state_publisher',
         output='both',
         parameters=parameters,
-        namespace=robot_name,  # TODO 6
+        namespace=robot_name,
     )
-    #############################################
     spawner = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
         output='screen',
         arguments=[
             '-topic',  str(robot_name) + '/robot_description',
-            '-entity', str(robot_name) + "/dummy", # TODO 6
+            '-entity', str(robot_name) + "/dummy",
             '-x',str(position[0]),
             '-y',str(position[1]),
             '-z',str(position[2]),
@@ -155,9 +151,6 @@ def generate_launch_description():
     # Code Here
     controller = ShareFile('dummy_gazebo','config','_controller_config.yaml')
     gazebo_server,gazebo_client = launch_action_gazebo()
-    #############################################
-    # TODO 6: Spawn Many Robot
-    #############################################
     actions = []
     # robot_name = "my_robot_1"
     for i in range(0,5):
@@ -170,7 +163,6 @@ def generate_launch_description():
             [0.0,i * 2.0,0.0],
             robot_name,
         )
-    #############################################
     launch_description = LaunchDescription()
     launch_description.add_action(gazebo_server)
     launch_description.add_action(gazebo_client)
