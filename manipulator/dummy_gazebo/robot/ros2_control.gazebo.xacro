@@ -1,3 +1,51 @@
 <?xml version='1.0' encoding='utf-8'?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- ################################### -->
+    <!-- TODO 5 : Create Controller as Macro -->
+    <!-- ################################### -->
+    <!-- ##########  CODE HERE   ########### -->
+    <!-- ################################### -->
+    <xacro:macro name="controller_plugins" params="">
+        <!-- ROS2 Control -->
+        <ros2_control name="GazeboSystem" type="system">
+            <!-- Create Hardware Interface ( Resource Manager ) - Gazebo -->
+            <hardware>
+                <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+            </hardware>
+            <!-- Macro for joints -->
+            <xacro:macro name="robot_joint" params="link_id">
+                <joint name="joint_${link_id}">
+                    <!-- Command to Hardware Interface -->
+                    <command_interface name="position">
+                        <param name="min"> -3.14 </param>
+                        <param name="max"> +3.14 </param>
+                    </command_interface>
+                    <!-- Readings from Hardware Interface - Position -->
+                    <state_interface name="position">
+                        <param name="initial_value"> 0.0 </param>
+                    </state_interface>
+                    <!-- Readings from Hardware Interface - Velocity -->
+                    <state_interface name="velocity"></state_interface>
+                    <!-- Readings from Hardware Interface - Effort -->
+                    <state_interface name="effort"></state_interface>
+                </joint>
+            </xacro:macro>
+
+            <!-- LET's CALL the MACRO to Create things -->
+            <xacro:robot_joint link_id="1"/>
+            <xacro:robot_joint link_id="2"/>
+            <xacro:robot_joint link_id="3"/>
+        </ros2_control>
+
+        <!-- Create gazebo plugin to read above macro and create controller(driver) to joints in gazebo -->
+        <gazebo>
+            <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_joint_control">
+                <!-- YAML says that we can control the macro above (joint1, joint2, joint3) -->
+                <parameters>$(find dummy_gazebo)/config/_controller_config.yaml</parameters>
+            </plugin>
+        </gazebo>
+
+    </xacro:macro>
+    <!-- ################################### -->
 </robot>

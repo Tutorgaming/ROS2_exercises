@@ -1,15 +1,15 @@
 #!usr/bin/python3
 
 """
-This program is free software: you can redistribute it and/or modify it 
-under the terms of the GNU General Public License as published by the Free Software Foundation, 
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free Software Foundation,
 either version 3 of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
-without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with this program. 
+You should have received a copy of the GNU General Public License along with this program.
 If not, see <https://www.gnu.org/licenses/>.
 
 created by Thanacha Choopojcharoen at CoXsys Robotics (2022)
@@ -53,9 +53,9 @@ def launch_action_gazebo():
         ])
     )
     return gazebo_server,gazebo_client
-def launch_action_robot_spawner(dh_parameters,robot_description,position):
+def launch_action_robot_spawner(dh_parameters, robot_description, controller, position):
     # robot_state_publisher
-    DH2Transform(dh_parameters.package_name,dh_parameters.folder,dh_parameters.file) 
+    DH2Transform(dh_parameters.package_name,dh_parameters.folder,dh_parameters.file)
     parameters = []
     robot_desc_xml = xacro.process_file(robot_description.path).toxml()
     parameters.append({'robot_description':robot_desc_xml})
@@ -65,7 +65,7 @@ def launch_action_robot_spawner(dh_parameters,robot_description,position):
         executable='robot_state_publisher',
         output='both',
         parameters=parameters
-    )    
+    )
     spawner = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
@@ -81,12 +81,51 @@ def launch_action_robot_spawner(dh_parameters,robot_description,position):
             '-Y','0',
         ]
     )
-    
+
+    #############################################
+    # TODO 5: Create Controller for this robot
+    #############################################
+    # Code Here
+    # Create Controller for those joints of robot
+    # Commander (to Driver)
+    joint_trajectory_controller = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint_trajectory_position_controller",
+            "--controller-manager", "/controller_manager",
+        ],
+    )
+    # Interface (Driver) Reader
+    joint_state_broadcaster = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager", "/controller_manager",
+        ]
+    )
+    # Trajectory Generator (High Level Goal Gen for control test)
+    traj_gen = Node(
+        package="dummy_control",
+        executable="trajectory_generator.py"
+    )
+    #############################################
     actions = []
     actions.append(robot_state_publisher)
     actions.append(spawner)
-    
+
+    #############################################
+    # TODO 5: Create Controller for this robot
+    #############################################
+    # Code Here
+    actions.append(joint_trajectory_controller)
+    actions.append(joint_state_broadcaster)
+    actions.append(traj_gen)
+    #############################################
     return actions
+
+
 def recursive_yaml(value):
     if isinstance(value,dict):
         new_dict = dict()
@@ -100,23 +139,35 @@ def recursive_yaml(value):
         return new_list
     else:
         return value
+
 def generate_controller_config(controller,namespace):
+    #############################################
+    # TODO 5: Create Controller for this robot
+    #############################################
+    # Code Here
     pass
+    #############################################
+
 def generate_launch_description():
     dh_parameters = ShareFile('dummy_description','config','DH_parameters.yaml')
     robot_description = ShareFile('dummy_gazebo','robot','dummy.xacro')
-    
+    #############################################
+    # TODO 5: Create Controller for this robot
+    #############################################
+    # Code Here
+    controller = ShareFile('dummy_gazebo','config','_controller_config.yaml')
+    #############################################
     gazebo_server,gazebo_client = launch_action_gazebo()
     actions = launch_action_robot_spawner(
         dh_parameters,
         robot_description,
-        [0.0,0.0,0.0]
+        controller,
+        [0.0,0.0,0.0],
     )
     launch_description = LaunchDescription()
     launch_description.add_action(gazebo_server)
     launch_description.add_action(gazebo_client)
     for action in actions:
         launch_description.add_action(action)
-    
+
     return launch_description
-    

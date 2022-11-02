@@ -4,4 +4,9 @@
   <xacro:property name="gazebo_package" value="dummy_gazebo"/>
   <xacro:include filename="$(find ${description_package})/robot/dynamics/robot.xacro"/>
   <xacro:dummy_robot package="${description_package}"/>
+
+  <!-- TODO 5 : -->
+  <xacro:include filename="$(find ${gazebo_package})/robot/ros2_control.gazebo.xacro"/>
+  <xacro:controller_plugins/>
+
 </robot>
