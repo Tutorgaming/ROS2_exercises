@@ -2,11 +2,10 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <!-- ################################### -->
-    <!-- TODO 5 : Create Controller as Macro -->
+    <!-- TODO 6 : Spawn Many Robot -->
     <!-- ################################### -->
-    <!-- ##########  CODE HERE   ########### -->
+    <xacro:macro name="controller_plugins" params="namespace">
     <!-- ################################### -->
-    <xacro:macro name="controller_plugins" params="">
         <!-- ROS2 Control -->
         <ros2_control name="GazeboSystem" type="system">
             <!-- Create Hardware Interface ( Resource Manager ) - Gazebo -->
@@ -41,11 +40,17 @@
         <!-- Create gazebo plugin to read above macro and create controller(driver) to joints in gazebo -->
         <gazebo>
             <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_joint_control">
+                <!-- ################################### -->
+                <!-- TODO 6 : Spawn Many Robot -->
+                <!-- ################################### -->
                 <!-- YAML says that we can control the macro above (joint1, joint2, joint3) -->
-                <parameters>$(find dummy_gazebo)/config/_controller_config.yaml</parameters>
+                <parameters>$(find dummy_gazebo)/config/${namespace}_controller_config.yaml</parameters>
+                <ros>
+                    <namespace>/${namespace}</namespace>
+                </ros>
+                <!-- ################################### -->
+
             </plugin>
         </gazebo>
-
     </xacro:macro>
-    <!-- ################################### -->
 </robot>

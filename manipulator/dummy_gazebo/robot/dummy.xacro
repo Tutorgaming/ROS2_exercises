@@ -1,12 +1,26 @@
 <?xml version='1.0' encoding='utf-8'?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dummy">
+
+  <!-- ######################### -->
+  <!-- TODO 6 - Spawn Many Robot -->
+  <!-- ######################### -->
+  <!-- ######## CODE HERE ###### -->
+  <!-- For Getting things from outside -->
+  <xacro:arg name="robot_name" default=""/>
+  <!-- Things from outside to Xacro Variable -->
+  <xacro:property name="namespace" value="$(arg robot_name)"/>
+  <!-- ######################### -->
+
   <xacro:property name="description_package" value="dummy_description"/>
   <xacro:property name="gazebo_package" value="dummy_gazebo"/>
   <xacro:include filename="$(find ${description_package})/robot/dynamics/robot.xacro"/>
   <xacro:dummy_robot package="${description_package}"/>
-
-  <!-- TODO 5 : -->
   <xacro:include filename="$(find ${gazebo_package})/robot/ros2_control.gazebo.xacro"/>
-  <xacro:controller_plugins/>
+
+  <!-- ######################### -->
+  <!-- TODO 6 - Spawn Many Robot -->
+  <!-- ######################### -->
+  <xacro:controller_plugins namespace="${namespace}"/>
+  <!-- ######################### -->
 
 </robot>

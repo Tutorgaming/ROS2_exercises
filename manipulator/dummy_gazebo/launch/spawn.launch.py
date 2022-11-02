@@ -53,26 +53,43 @@ def launch_action_gazebo():
         ])
     )
     return gazebo_server,gazebo_client
-def launch_action_robot_spawner(dh_parameters, robot_description, controller, position):
+def launch_action_robot_spawner(dh_parameters, robot_description, controller, position, robot_name=""):
     # robot_state_publisher
     DH2Transform(dh_parameters.package_name,dh_parameters.folder,dh_parameters.file)
     parameters = []
-    robot_desc_xml = xacro.process_file(robot_description.path).toxml()
-    parameters.append({'robot_description':robot_desc_xml})
+    #############################################
+    # TODO 6: Many Robot
+    #############################################
+    if robot_name:
+        robot_desc_xml = xacro.process_file(
+            robot_description.path,
+            mappings={'robot_name':robot_name}
+    ).toxml()
+    else:
+        robot_desc_xml = xacro.process_file(
+            robot_description.path
+        ).toxml()
+    parameters.append({
+        'robot_description':robot_desc_xml,
+        "frame_prefix": str(robot_name) + "/" if robot_name else ""   # TODO 6
+    })
     parameters.append({'use_sim_time': True})
+
     robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='both',
-        parameters=parameters
+        parameters=parameters,
+        namespace=robot_name,  # TODO 6
     )
+    #############################################
     spawner = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
         output='screen',
         arguments=[
-            '-topic','/robot_description',
-            '-entity','/dummy',
+            '-topic',  str(robot_name) + '/robot_description',
+            '-entity', str(robot_name) + "/dummy", # TODO 6
             '-x',str(position[0]),
             '-y',str(position[1]),
             '-z',str(position[2]),
@@ -82,10 +99,6 @@ def launch_action_robot_spawner(dh_parameters, robot_description, controller, po
         ]
     )
 
-    #############################################
-    # TODO 5: Create Controller for this robot
-    #############################################
-    # Code Here
     # Create Controller for those joints of robot
     # Commander (to Driver)
     joint_trajectory_controller = Node(
@@ -93,7 +106,7 @@ def launch_action_robot_spawner(dh_parameters, robot_description, controller, po
         executable="spawner",
         arguments=[
             "joint_trajectory_position_controller",
-            "--controller-manager", "/controller_manager",
+            "--controller-manager", "{}/controller_manager".format(robot_name),
         ],
     )
     # Interface (Driver) Reader
@@ -102,68 +115,62 @@ def launch_action_robot_spawner(dh_parameters, robot_description, controller, po
         executable="spawner",
         arguments=[
             "joint_state_broadcaster",
-            "--controller-manager", "/controller_manager",
+            "--controller-manager", "{}/controller_manager".format(robot_name),
         ]
     )
     # Trajectory Generator (High Level Goal Gen for control test)
     traj_gen = Node(
         package="dummy_control",
-        executable="trajectory_generator.py"
+        executable="trajectory_generator.py",
+        namespace=robot_name
     )
-    #############################################
     actions = []
     actions.append(robot_state_publisher)
     actions.append(spawner)
-
-    #############################################
-    # TODO 5: Create Controller for this robot
-    #############################################
-    # Code Here
     actions.append(joint_trajectory_controller)
     actions.append(joint_state_broadcaster)
     actions.append(traj_gen)
-    #############################################
     return actions
 
-
-def recursive_yaml(value):
-    if isinstance(value,dict):
-        new_dict = dict()
-        for k,v in value.items():
-            new_dict[k] = recursive_yaml(v)
-        return new_dict
-    if isinstance(value,list):
-        new_list = list()
-        for e in value:
-            new_list.append(e)
-        return new_list
-    else:
-        return value
-
-def generate_controller_config(controller,namespace):
+def generate_controller_config(controller:ShareFile, namespace):
     #############################################
-    # TODO 5: Create Controller for this robot
+    # TODO 6: Spawn Many Robot
     #############################################
     # Code Here
-    pass
+    # Open Default Config and nested under the NAMESPACE for ease of on-the-fly yaml generate for controller launch
+    with open(controller.path, "r") as file:
+        doc = yaml.load(file, yaml.SafeLoader)
+        new_doc = {
+            namespace : doc
+        }
+        controller_config_path = os.path.join(controller.package_path, controller.folder, namespace+controller.file)
+        with open(controller_config_path, "w") as new_file:
+            yaml.dump(new_doc, new_file)
+    return controller_config_path
     #############################################
 
 def generate_launch_description():
     dh_parameters = ShareFile('dummy_description','config','DH_parameters.yaml')
     robot_description = ShareFile('dummy_gazebo','robot','dummy.xacro')
-    #############################################
-    # TODO 5: Create Controller for this robot
-    #############################################
     # Code Here
     controller = ShareFile('dummy_gazebo','config','_controller_config.yaml')
-    #############################################
     gazebo_server,gazebo_client = launch_action_gazebo()
-    actions = launch_action_robot_spawner(
-        dh_parameters,
-        robot_description,
-        controller,
-        [0.0,0.0,0.0],
-    )
+    #############################################
+    # TODO 6: Spawn Many Robot
+    #############################################
+    actions = []
+    # robot_name = "my_robot_1"
+    for i in range(0,5):
+        robot_name = "dummy_{}".format(i)
+        new_controller_yaml_config = generate_controller_config(controller, robot_name)
+        actions += launch_action_robot_spawner(
+            dh_parameters,
+            robot_description,
+            new_controller_yaml_config,
+            [0.0,i * 2.0,0.0],
+            robot_name,
+        )
+    #############################################
     launch_description = LaunchDescription()
     launch_description.add_action(gazebo_server)
     launch_description.add_action(gazebo_client)
@@ -171,3 +178,57 @@ def generate_launch_description():
         launch_description.add_action(action)
 
     return launch_description
+
+
+    """
+    # EXEC
+
+    ros2 service call /dummy_0/set_joints dummy_kinematics_interfaces/srv/SetConfig "joint_states:
+  header:
+    stamp:
+      sec: 0
+      nanosec: 0
+    frame_id: ''
+  name: []
+  position: []
+  velocity: []
+  effort: []" ; ros2 service call /dummy_1/set_joints dummy_kinematics_interfaces/srv/SetConfig "joint_states:
+  header:
+    stamp:
+      sec: 0
+      nanosec: 0
+    frame_id: ''
+  name: []
+  position: []
+  velocity: []
+  effort: []" ; ros2 service call /dummy_2/set_joints dummy_kinematics_interfaces/srv/SetConfig "joint_states:
+  header:
+    stamp:
+      sec: 0
+      nanosec: 0
+    frame_id: ''
+  name: []
+  position: []
+  velocity: []
+  effort: []" ; ros2 service call /dummy_3/set_joints dummy_kinematics_interfaces/srv/SetConfig "joint_states:
+  header:
+    stamp:
+      sec: 0
+      nanosec: 0
+    frame_id: ''
+  name: []
+  position: []
+  velocity: []
+  effort: []" ; ros2 service call /dummy_4/set_joints dummy_kinematics_interfaces/srv/SetConfig "joint_states:
+  header:
+    stamp:
+      sec: 0
+      nanosec: 0
+    frame_id: ''
+  name: []
+  position: []
+  velocity: []
+  effort: []"
+
+
+    """
