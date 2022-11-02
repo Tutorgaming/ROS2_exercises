@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- Visual Off the Base Mesh -->
+    <xacro:macro name="base_visual" params="path">
+        <visual>
+            <origin xyz="0.0 0.0 ${-BASE_MESH_Z_OFFSET}" rpy="0.0 0.0 ${PI/2}"/>
+            <geometry>
+                <mesh filename="${path}" scale="1.0 1.0 1.0"/>
+            </geometry>
+            <material name="chassis_color">
+                <color rgba="${BASE_COLOR}"/>
+            </material>
+        </visual>
+    </xacro:macro>
+
+    <!-- Link Detail of Base Mesh -->
+    <xacro:macro name="base_offset" params="namespace">
+        <link name="${namespace}/base_footprint"/>
+        <joint name="base_offset" type="fixed">
+            <parent link="${namespace}/base_footprint"/>
+            <child link="${namespace}/base_link"/>
+            <origin xyz="0.0 0.0 ${BASE_ELEVATION + BASE_HEIGHT/2.0}" rpy="0.0 0.0 0.0"/>
+        </joint>
+    </xacro:macro>
+
+    <!-- Base -->
+    <xacro:macro name="base_graphics" params="package mesh_path namespace">
+        <link name="${namespace}/base_link">
+            <xacro:base_visual path="package://${package}/${mesh_path}" />
+        </link>
+        <xacro:base_offset namespace="${namespace}"/>
+    </xacro:macro>
+
+</robot>

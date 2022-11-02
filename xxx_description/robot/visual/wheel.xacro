@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- Wheel Visual Macro -->
+    <xacro:macro name="wheel_visual" params="name">
+        <visual>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <geometry>
+                <cylinder radius="${WHEEL_RADIUS}" length="${WHEEL_THICKNESS}"/>
+            </geometry>
+            <material name="${name}_wheel_color">
+                <color rgba="${WHEEL_COLOR}"/>
+            </material>
+        </visual>
+    </xacro:macro>
+
+    <!-- Wheel Joint Macro -->
+    <xacro:macro name="wheel_joint" params="name translation_y namespace">
+        <joint name="${name}_wheel_joint" type="continuous">
+            <origin xyz="0.0 ${translation_y} ${WHEEL_RADIUS - (BASE_HEIGHT/2+BASE_ELEVATION)}" rpy="${-PI/2} 0.0 0.0"/>
+            <parent link="${namespace}/base_link"/>
+            <child link="${namespace}/${name}_wheel"/>
+            <axis xyz="0.0 0.0 1.0"/>
+            <joint_properties damping="1.0" friction="1.0"/>
+        </joint>
+    </xacro:macro>
+
+    <xacro:macro name="wheel_graphics" params="name translation_y namespace">
+        <link name="${namespace}/${name}_wheel">
+            <xacro:wheel_visual name="${name}"/>
+        </link>
+        <xacro:wheel_joint name="${name}" translation_y="${translation_y}" namespace="${namespace}"/>
+    </xacro:macro>
+
+    <xacro:macro name="wheel_set_graphics" params="namespace">
+        <xacro:wheel_graphics name="left" translation_y="${WHEEL_SEPARATION/2}" namespace="${namespace}"/>
+        <xacro:wheel_graphics name="right" translation_y="${-WHEEL_SEPARATION/2}" namespace="${namespace}"/>
+    </xacro:macro>
+
+</robot>

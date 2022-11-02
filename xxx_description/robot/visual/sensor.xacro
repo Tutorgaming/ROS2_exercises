@@ -1,6 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:include filename="$(find xxx_description)/urdf/visual/properties.xacro"/>
   <!-- Contents-->
   <xacro:macro name="sensor_link" params="namespace">
     <link name="${namespace}/lidar_link">
@@ -15,7 +14,7 @@
       <parent link="${namespace}/base_link"/>
       <child link="${namespace}/lidar_link"/>
     </joint>
-  
+
     <link name="${namespace}/camera_link">
       <visual>
           <origin xyz="0 0 0" rpy="0 0 0" />
@@ -28,18 +27,18 @@
     <joint name="${namespace}/camera_joint" type="fixed">
         <parent link="${namespace}/base_link" />
         <child link="${namespace}/camera_link" />
-        <origin xyz="${CAMERA_OFFSET} 0 ${CAMERA_HEIGHT}" /> 
+        <origin xyz="${CAMERA_OFFSET} 0 ${CAMERA_HEIGHT}" />
     </joint>
     <joint name="${namespace}/camera_optical_mount" type="fixed">
         <parent link="${namespace}/camera_link" />
         <child link="${namespace}/camera_optical" />
-        <origin xyz="0 0 0" rpy="${-PI/2} 0 ${-PI/2}" /> 
+        <origin xyz="0 0 0" rpy="${-PI/2} 0 ${-PI/2}" />
     </joint>
     <link name="${namespace}/imu_link"/>
     <joint name="${namespace}/imu_mount" type="fixed">
       <parent link="${namespace}/base_link" />
       <child link="${namespace}/imu_link" />
-      <origin xyz="0 0 0" rpy="0 0 0" /> 
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </joint>
   </xacro:macro>
 </robot>
