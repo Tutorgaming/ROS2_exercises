@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="xxx">
     <xacro:include filename="$(find xxx_description)/robot/visual/properties.xacro"/>
     <xacro:include filename="$(find xxx_description)/robot/visual/sensor.xacro"/>
-    
+
     <xacro:macro name="sensors_plugins" params="">
         <xacro:sensor_link/>
     <!-- imu -->
@@ -24,8 +24,12 @@
                 <initialOrientationAsReference>false</initialOrientationAsReference>
             </plugin>
                 <pose>0 0 0 0 0 0</pose>
+                <ros>
+                    <remapping>~/out:=imu</remapping>
+                    <namespace></namespace>
+                </ros>
             </sensor>
-        </gazebo> 
+        </gazebo>
 
         <!-- diff_drive -->
         <!-- <gazebo>
@@ -76,10 +80,14 @@
                 <plugin name="lidar_controller" filename="libgazebo_ros_ray_sensor.so">
                     <output_type>sensor_msgs/LaserScan</output_type>
                     <topicName>scan</topicName>
+                    <ros>
+                        <remapping>~/out:=imu</remapping>
+                        <namespace></namespace>
+                    </ros>
                 </plugin>
             </sensor>
         </gazebo>
-    
+
         <gazebo reference="camera_link">
             <sensor type="depth" name="camera">
             <always_on>1</always_on>
@@ -108,6 +116,6 @@
                 <hackBaseline>0.07</hackBaseline>
             </plugin>
             </sensor>
-        </gazebo> 
+        </gazebo>
     </xacro:macro>
 </robot>
